@@ -89,6 +89,7 @@ final class LoginViewController: UIViewController {
         let email = emailTextField.text ?? ""
         let password = passwordTextField.text ?? ""
         viewModel.login(email: email, password: password)
+        self.navigationController?.setViewControllers([MainTabBarController()], animated: true)
     }
     
     @objc private func goToSignup() {
