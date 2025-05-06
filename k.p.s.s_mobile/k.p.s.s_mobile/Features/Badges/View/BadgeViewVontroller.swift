@@ -11,6 +11,12 @@ import UIKit
 final class BadgeViewController: UIViewController {
     private let viewModel = BadgeViewModel(service: BadgeService())
     private let tableView = UITableView()
+    
+    private func showErrorAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Tamam", style: .default))
+        present(alert, animated: true)
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -25,12 +31,17 @@ final class BadgeViewController: UIViewController {
         viewModel.onUpdate = { [weak self] in
             self?.tableView.reloadData()
         }
+        
 
         if let userId = UserDefaults.standard.integer(forKey: "user_id") as Int?, userId > 0 {
                     viewModel.loadBadges(for: userId)
                 } else {
                     print("❗ User ID bulunamadı.")
                 }
+        viewModel.onError = { [weak self] message in
+            self?.showErrorAlert(title: "Rozet Hatası", message: message)
+        }
+
     }
 }
 

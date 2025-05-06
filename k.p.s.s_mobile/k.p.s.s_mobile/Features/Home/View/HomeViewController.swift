@@ -16,6 +16,7 @@ final class HomeViewController: UIViewController {
 
     private let scrollView = UIScrollView()
     private let contentView = UIStackView()
+    private let loadingView = LoadingView()
 
     private let promptCardView: UIView = {
         let view = UIView()
@@ -84,6 +85,31 @@ final class HomeViewController: UIViewController {
         return label
     }()
     
+    private let memoryHeaderStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.spacing = 8
+        stack.alignment = .center
+        return stack
+    }()
+
+    private let memoryIcon: UIImageView = {
+        let iv = UIImageView()
+        iv.image = UIImage(named: "fikir")
+        iv.contentMode = .scaleAspectFit
+        iv.widthAnchor.constraint(equalToConstant: 64).isActive = true
+        iv.heightAnchor.constraint(equalToConstant: 64).isActive = true
+        return iv
+    }()
+
+    private let memoryTitleLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Beyno'dan harika hafıza trickleri"
+        label.font = .systemFont(ofSize: 15, weight: .semibold)
+        label.textColor = .systemTeal
+        return label
+    }()
+
     var onLessonLoaded: ((LessonResponse) -> Void)?
     var onError: ((String) -> Void)?
 
@@ -94,6 +120,22 @@ final class HomeViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         bindViewModel()
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+                image: UIImage(systemName: "arrow.clockwise"),
+                style: .plain,
+                target: self,
+                action: #selector(resetPromptCard)
+            )
+
+            navigationItem.leftBarButtonItem = UIBarButtonItem(
+                image: UIImage(systemName: "power"),
+                style: .plain,
+                target: self,
+                action: #selector(logoutTapped)
+            )
+        navigationItem.leftBarButtonItem?.tintColor = .systemRed
+        
+        
     }
 
     // MARK: - Binding
@@ -103,16 +145,18 @@ final class HomeViewController: UIViewController {
             guard let self = self else { return }
 
             DispatchQueue.main.async {
+                self.loadingView.hide()
                 self.promptCardView.isHidden = true
                 self.infoTextView.text = response.content
                 self.infoTextView.isHidden = false
-                self.memoryLabel.text = "🧠 Hafıza Tekniği:\n\n\(response.memoryTip)"
+                self.memoryLabel.text = "Hafıza Tekniği:\n\n\(response.memoryTip)"
                 self.memoryCardView.isHidden = false
             }
         }
 
         viewModel.onError = { [weak self] message in
             DispatchQueue.main.async {
+                self?.loadingView.hide()
                 let alert = UIAlertController(title: "Hata", message: message, preferredStyle: .alert)
                 alert.addAction(UIAlertAction(title: "Tamam", style: .default))
                 self?.present(alert, animated: true)
@@ -163,14 +207,24 @@ final class HomeViewController: UIViewController {
             promptStack.trailingAnchor.constraint(equalTo: promptCardView.trailingAnchor, constant: -16)
         ])
 
-        memoryCardView.addSubview(memoryLabel)
-        memoryLabel.translatesAutoresizingMaskIntoConstraints = false
+        // Header stack içine icon ve başlık label'ını ekle
+        memoryHeaderStack.addArrangedSubview(memoryIcon)
+        memoryHeaderStack.addArrangedSubview(memoryTitleLabel)
+
+        // Icon ve başlığın altına memoryLabel'ı koyan bir dikey stack
+        let memoryVerticalStack = UIStackView(arrangedSubviews: [memoryHeaderStack, memoryLabel])
+        memoryVerticalStack.axis = .vertical
+        memoryVerticalStack.spacing = 12
+        memoryVerticalStack.translatesAutoresizingMaskIntoConstraints = false
+
+        memoryCardView.addSubview(memoryVerticalStack)
         NSLayoutConstraint.activate([
-            memoryLabel.topAnchor.constraint(equalTo: memoryCardView.topAnchor, constant: 16),
-            memoryLabel.bottomAnchor.constraint(equalTo: memoryCardView.bottomAnchor, constant: -16),
-            memoryLabel.leadingAnchor.constraint(equalTo: memoryCardView.leadingAnchor, constant: 16),
-            memoryLabel.trailingAnchor.constraint(equalTo: memoryCardView.trailingAnchor, constant: -16)
+            memoryVerticalStack.topAnchor.constraint(equalTo: memoryCardView.topAnchor, constant: 16),
+            memoryVerticalStack.bottomAnchor.constraint(equalTo: memoryCardView.bottomAnchor, constant: -16),
+            memoryVerticalStack.leadingAnchor.constraint(equalTo: memoryCardView.leadingAnchor, constant: 16),
+            memoryVerticalStack.trailingAnchor.constraint(equalTo: memoryCardView.trailingAnchor, constant: -16)
         ])
+
 
         // View Hiyerarşisi
         contentView.addArrangedSubview(promptCardView)
@@ -182,10 +236,34 @@ final class HomeViewController: UIViewController {
     }
 
     // MARK: - Action
+    
+    @objc private func resetPromptCard() {
+        promptField.text = ""
+        promptCardView.isHidden = false
+        infoTextView.isHidden = true
+        memoryCardView.isHidden = true
+    }
+    
+    @objc private func logoutTapped() {
+     
+        UserDefaults.standard.removeObject(forKey: "access_token")
+        UserDefaults.standard.removeObject(forKey: "user_id")
+
+      
+        let loginVC = LoginViewController()
+        let navVC = UINavigationController(rootViewController: loginVC)
+        navVC.modalPresentationStyle = .fullScreen
+        present(navVC, animated: true)
+        
+       
+        resetPromptCard()
+    }
+
 
     @objc private func learnButtonTapped() {
         guard let topic = promptField.text, !topic.trimmingCharacters(in: .whitespaces).isEmpty else { return }
         if let userId = UserDefaults.standard.integer(forKey: "user_id") as Int?, userId > 0 {
+            loadingView.show(in: view)
             viewModel.generateLesson(topic: topic, userId: userId)
                 } else {
                     print("❗ User ID bulunamadı.")

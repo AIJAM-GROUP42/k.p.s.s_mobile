@@ -14,6 +14,8 @@ final class QuizViewModel {
 
     var onUpdate: (() -> Void)?
     var onSubmitted: ((String) -> Void)?
+    var onError: ((String) -> Void)?
+
 
     init(service: QuizServiceProtocol) {
         self.service = service
@@ -27,7 +29,8 @@ final class QuizViewModel {
                     self?.questions = quiz
                     self?.onUpdate?()
                 case .failure(let error):
-                    print("Quiz fetch error:", error)
+                    self?.onError?("Quiz yüklenemedi: \(error.localizedDescription)")
+
                 }
             }
         }
@@ -50,8 +53,9 @@ final class QuizViewModel {
                 switch result {
                 case .success(let message):
                     self?.onSubmitted?(message)
-                case .failure:
-                    self?.onSubmitted?("Gönderim başarısız.")
+                case .failure(let error):
+                    self?.onSubmitted?("Gönderim başarısız: \(error.localizedDescription)")
+
                 }
             }
         }

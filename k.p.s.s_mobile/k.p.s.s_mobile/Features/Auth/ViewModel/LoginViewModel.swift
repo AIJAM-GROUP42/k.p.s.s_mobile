@@ -27,8 +27,9 @@ final class LoginViewModel {
 
                     self?.onLoginSuccess?(token)
 
-                case .failure:
-                    self?.onLoginFailure?("Giriş başarısız.")
+                case .failure(let error):
+                    self?.onLoginFailure?(error.localizedDescription)
+
                 }
             }
         }

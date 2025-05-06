@@ -72,6 +72,11 @@ final class LoginViewController: UIViewController {
             stackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -32)
         ])
     }
+    private func showErrorAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Tamam", style: .default))
+        present(alert, animated: true)
+    }
 
     private func bindViewModel() {
         viewModel.onLoginSuccess = { token in
@@ -81,12 +86,10 @@ final class LoginViewController: UIViewController {
             }
         }
 
-        /*
-        viewModel.onLoginFailure = { [weak self] errorMessage in
-            self?.statusLabel.text = errorMessage
-            self?.statusLabel.textColor = .systemRed
-        }
-        */
+        viewModel.onLoginFailure = { [weak self] message in
+                self?.showErrorAlert(title: "Giriş Hatası", message: message)
+            }
+        
     }
 
     @objc private func loginButtonTapped() {
