@@ -17,6 +17,22 @@ final class SignupViewController: UIViewController {
     private let passwordTextField = UITextField()
     private let signupButton = UIButton(type: .system)
     private let statusLabel = UILabel()
+    private let imageView: UIImageView = {
+        let iv = UIImageView(image: UIImage(named: "kaydol"))
+        iv.contentMode = .scaleAspectFit
+        iv.heightAnchor.constraint(equalToConstant: 180).isActive = true
+        return iv
+    }()
+
+    private let imageDescriptionLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Yeni bir hesap oluştur!"
+        label.textAlignment = .center
+        label.textColor = .systemIndigo
+        label.font = .systemFont(ofSize: 18, weight: .medium)
+        return label
+    }()
+
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -29,34 +45,55 @@ final class SignupViewController: UIViewController {
     private func setupUI() {
         nameTextField.placeholder = "Ad"
         nameTextField.borderStyle = .roundedRect
+        nameTextField.layer.borderColor = UIColor.systemIndigo.cgColor
+        nameTextField.layer.borderWidth = 1
+        nameTextField.layer.cornerRadius = 8
+
+
         
         surnameTextField.placeholder = "Soyad"
         surnameTextField.borderStyle = .roundedRect
+        surnameTextField.layer.borderColor = UIColor.systemIndigo.cgColor
+        surnameTextField.layer.borderWidth = 1
+        surnameTextField.layer.cornerRadius = 8
+
 
         emailTextField.placeholder = "E-posta"
         emailTextField.borderStyle = .roundedRect
         emailTextField.autocapitalizationType = .none
+        emailTextField.layer.borderColor = UIColor.systemIndigo.cgColor
+        emailTextField.layer.borderWidth = 1
+        emailTextField.layer.cornerRadius = 8
+
 
         passwordTextField.placeholder = "Şifre"
         passwordTextField.borderStyle = .roundedRect
         passwordTextField.isSecureTextEntry = true
+        passwordTextField.layer.borderColor = UIColor.systemIndigo.cgColor
+        passwordTextField.layer.borderWidth = 1
+        passwordTextField.layer.cornerRadius = 8
+
 
         signupButton.setTitle("Kayıt Ol", for: .normal)
         signupButton.addTarget(self, action: #selector(signupButtonTapped), for: .touchUpInside)
+        signupButton.setTitleColor(.systemIndigo, for: .normal)
+        signupButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
+        
 
         statusLabel.textAlignment = .center
         statusLabel.numberOfLines = 0
 
-        let stack = UIStackView(arrangedSubviews: [nameTextField, surnameTextField, emailTextField, passwordTextField, signupButton, statusLabel])
+        let stack = UIStackView(arrangedSubviews: [imageView, imageDescriptionLabel, nameTextField, surnameTextField, emailTextField, passwordTextField, signupButton, statusLabel])
         stack.axis = .vertical
         stack.spacing = 16
         stack.translatesAutoresizingMaskIntoConstraints = false
 
         view.addSubview(stack)
         NSLayoutConstraint.activate([
+            stack.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             stack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 32),
             stack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -32),
-            stack.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+          
         ])
     }
 

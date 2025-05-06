@@ -16,6 +16,9 @@ final class LoginViewController: UIViewController {
         textField.placeholder = "E-posta"
         textField.borderStyle = .roundedRect
         textField.autocapitalizationType = .none
+        textField.layer.borderColor = UIColor.systemIndigo.cgColor
+        textField.layer.borderWidth = 1
+        textField.layer.cornerRadius = 8
         return textField
     }()
 
@@ -24,22 +27,51 @@ final class LoginViewController: UIViewController {
         textField.placeholder = "Şifre"
         textField.borderStyle = .roundedRect
         textField.isSecureTextEntry = true
+        textField.layer.borderColor = UIColor.systemIndigo.cgColor
+        textField.layer.borderWidth = 1
+        textField.layer.cornerRadius = 8
+
         return textField
     }()
 
     private let loginButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Giriş Yap", for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = .systemIndigo
+        button.layer.cornerRadius = 8
+        button.heightAnchor.constraint(equalToConstant: 44).isActive = true
         button.addTarget(self, action: #selector(loginButtonTapped), for: .touchUpInside)
         return button
     }()
+
     
     private let goToSignupButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Hesabın yok mu? Kayıt Ol", for: .normal)
+        button.setTitleColor(.systemIndigo, for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
         button.addTarget(self, action: #selector(goToSignup), for: .touchUpInside)
         return button
     }()
+
+    
+    private let imageView: UIImageView = {
+        let iv = UIImageView(image: UIImage(named: "login"))
+        iv.contentMode = .scaleAspectFit
+        iv.heightAnchor.constraint(equalToConstant: 180).isActive = true
+        return iv
+    }()
+
+    private let imageDescriptionLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Beyno İle Ders Çalışmaya Hazır Ol"
+        label.textAlignment = .center
+        label.textColor = .systemIndigo
+        label.font = .systemFont(ofSize: 14, weight: .medium)
+        return label
+    }()
+
 
 
     private let statusLabel: UILabel = {
@@ -59,7 +91,7 @@ final class LoginViewController: UIViewController {
     }
 
     private func setupLayout() {
-        let stackView = UIStackView(arrangedSubviews: [emailTextField, passwordTextField, loginButton, goToSignupButton, statusLabel])
+        let stackView = UIStackView(arrangedSubviews: [imageView, imageDescriptionLabel, emailTextField, passwordTextField, loginButton, goToSignupButton, statusLabel])
         stackView.axis = .vertical
         stackView.spacing = 16
         stackView.translatesAutoresizingMaskIntoConstraints = false
