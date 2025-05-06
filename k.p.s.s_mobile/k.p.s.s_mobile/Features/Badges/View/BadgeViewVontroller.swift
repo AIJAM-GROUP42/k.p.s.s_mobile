@@ -9,7 +9,7 @@ import UIKit
 
 
 final class BadgeViewController: UIViewController {
-    private let viewModel = BadgeViewModel(service: MockBadgeService()) // ViewModel tanımlandı
+    private let viewModel = BadgeViewModel(service: BadgeService())
     private let tableView = UITableView()
 
     override func viewDidLoad() {
@@ -22,12 +22,15 @@ final class BadgeViewController: UIViewController {
         tableView.frame = view.bounds
         view.addSubview(tableView)
 
-        // ViewModel'e bağlan
         viewModel.onUpdate = { [weak self] in
             self?.tableView.reloadData()
         }
 
-        viewModel.loadBadges()
+        if let userId = UserDefaults.standard.integer(forKey: "user_id") as Int?, userId > 0 {
+                    viewModel.loadBadges(for: userId)
+                } else {
+                    print("❗ User ID bulunamadı.")
+                }
     }
 }
 
@@ -40,8 +43,7 @@ extension BadgeViewController: UITableViewDataSource {
         let badge = viewModel.badges[indexPath.row]
         let cell = tableView.dequeueReusableCell(withIdentifier: "badgeCell", for: indexPath)
         cell.textLabel?.numberOfLines = 0
-        cell.textLabel?.text = "\(badge.title)\n\(badge.description)"
+        cell.textLabel?.text = "🏅 \(badge.title)\n\(badge.description)"
         return cell
     }
 }
-

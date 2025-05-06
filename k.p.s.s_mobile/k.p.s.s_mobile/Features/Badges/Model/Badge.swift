@@ -8,7 +8,6 @@
 import Foundation
 
 struct Badge: Codable {
-    let id: Int
     let title: String
     let description: String
 }

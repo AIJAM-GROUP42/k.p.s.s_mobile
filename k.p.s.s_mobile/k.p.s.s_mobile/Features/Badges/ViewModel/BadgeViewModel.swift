@@ -9,21 +9,23 @@ import Foundation
 
 final class BadgeViewModel {
     private let service: BadgeServiceProtocol
-    var badges: [Badge] = []
+    private(set) var badges: [Badge] = []
     var onUpdate: (() -> Void)?
 
     init(service: BadgeServiceProtocol) {
         self.service = service
     }
 
-    func loadBadges() {
-        service.fetchBadges { [weak self] result in
-            switch result {
-            case .success(let badges):
-                self?.badges = badges
-                self?.onUpdate?()
-            case .failure(let error):
-                print("Rozetler yüklenemedi: \(error)")
+    func loadBadges(for userId: Int) {
+        service.fetchBadges(for: userId) { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let badges):
+                    self?.badges = badges
+                    self?.onUpdate?()
+                case .failure(let error):
+                    print("Rozet yüklenemedi:", error)
+                }
             }
         }
     }

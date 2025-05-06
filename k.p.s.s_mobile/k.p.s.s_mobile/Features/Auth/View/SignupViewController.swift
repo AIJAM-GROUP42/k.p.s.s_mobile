@@ -9,9 +9,10 @@ import UIKit
 
 final class SignupViewController: UIViewController {
 
-    private let viewModel = SignupViewModel(service: MockAuthService())
+    private let viewModel = SignupViewModel(service: AuthService())
 
     private let nameTextField = UITextField()
+    private let surnameTextField = UITextField()
     private let emailTextField = UITextField()
     private let passwordTextField = UITextField()
     private let signupButton = UIButton(type: .system)
@@ -26,8 +27,11 @@ final class SignupViewController: UIViewController {
     }
 
     private func setupUI() {
-        nameTextField.placeholder = "Ad Soyad"
+        nameTextField.placeholder = "Ad"
         nameTextField.borderStyle = .roundedRect
+        
+        surnameTextField.placeholder = "Soyad"
+        surnameTextField.borderStyle = .roundedRect
 
         emailTextField.placeholder = "E-posta"
         emailTextField.borderStyle = .roundedRect
@@ -38,12 +42,12 @@ final class SignupViewController: UIViewController {
         passwordTextField.isSecureTextEntry = true
 
         signupButton.setTitle("Kayıt Ol", for: .normal)
-        signupButton.addTarget(self, action: #selector(signupTapped), for: .touchUpInside)
+        signupButton.addTarget(self, action: #selector(signupButtonTapped), for: .touchUpInside)
 
         statusLabel.textAlignment = .center
         statusLabel.numberOfLines = 0
 
-        let stack = UIStackView(arrangedSubviews: [nameTextField, emailTextField, passwordTextField, signupButton, statusLabel])
+        let stack = UIStackView(arrangedSubviews: [nameTextField, surnameTextField, emailTextField, passwordTextField, signupButton, statusLabel])
         stack.axis = .vertical
         stack.spacing = 16
         stack.translatesAutoresizingMaskIntoConstraints = false
@@ -57,25 +61,29 @@ final class SignupViewController: UIViewController {
     }
 
     private func bindViewModel() {
-        viewModel.onSignupSuccess = { [weak self] user in
-            self?.statusLabel.text = "Kayıt başarılı: \(user.name)"
-            self?.statusLabel.textColor = .systemGreen
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    self?.navigationController?.popViewController(animated: true)
-                }
+        viewModel.onSignupSuccess = { [weak self] in
+            let alert = UIAlertController(title: "Başarılı", message: "Kayıt başarılı! Giriş ekranına yönlendiriliyorsunuz.", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "Tamam", style: .default) { _ in
+                self?.navigationController?.popViewController(animated: true)
+            })
+            self?.present(alert, animated: true)
         }
 
-        viewModel.onSignupError = { [weak self] error in
-            self?.statusLabel.text = "Hata: \(error)"
+        viewModel.onSignupFailure = { [weak self] error in
+            self?.statusLabel.text = error
             self?.statusLabel.textColor = .systemRed
         }
     }
 
-    @objc private func signupTapped() {
+
+    @objc private func signupButtonTapped() {
         viewModel.signup(
             name: nameTextField.text ?? "",
+            surname: surnameTextField.text ?? "",
             email: emailTextField.text ?? "",
             password: passwordTextField.text ?? ""
         )
     }
+
 }
+

@@ -6,6 +6,6 @@
 //
 
 protocol QuizServiceProtocol {
-    func fetchQuiz(completion: @escaping (Result<[QuizQuestion], Error>) -> Void)
-    func submitQuiz(_ submission: QuizSubmission, completion: @escaping (Result<Void, Error>) -> Void)
+    func fetchQuiz(for topic: String, completion: @escaping (Result<[QuizQuestion], Error>) -> Void)
+    func submitQuiz(userId: Int, correctCount: Int, score: Int, completion: @escaping (Result<String, Error>) -> Void)
 }

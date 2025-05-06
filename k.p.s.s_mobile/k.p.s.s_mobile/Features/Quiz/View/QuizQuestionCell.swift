@@ -18,18 +18,16 @@ final class QuizQuestionCell: UITableViewCell {
         label.font = UIFont.boldSystemFont(ofSize: 16)
         return label
     }()
-
-    private var optionButtons: [UIButton] = []
-    private var correctAnswer: String = ""
-
     private let optionsStack: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
         stack.spacing = 10
         return stack
     }()
-    
+    private var optionButtons: [UIButton] = []
     var onAnswered: ((String) -> Void)?
+    private var correctIndex: Int = -1
+
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -63,15 +61,18 @@ final class QuizQuestionCell: UITableViewCell {
 
     func configure(with question: QuizQuestion) {
         questionLabel.text = question.question
-        correctAnswer = question.correctAnswer
 
-        for option in question.options {
+        for (index, option) in question.options.enumerated() {
             let button = createStyledButton(title: option)
+            button.tag = index // hangi seçenek olduğunu anlayalım
             button.addTarget(self, action: #selector(optionTapped(_:)), for: .touchUpInside)
             optionButtons.append(button)
             optionsStack.addArrangedSubview(button)
         }
+
+        correctIndex = question.answerIndex
     }
+
 
     private func createStyledButton(title: String) -> UIButton {
         let button = UIButton(type: .system)
@@ -86,22 +87,19 @@ final class QuizQuestionCell: UITableViewCell {
     }
 
     @objc private func optionTapped(_ sender: UIButton) {
-        guard let answer = sender.titleLabel?.text else { return }
-
+        let selectedIndex = sender.tag
 
         optionButtons.forEach { $0.isUserInteractionEnabled = false }
 
-        if answer == correctAnswer {
+        if selectedIndex == correctIndex {
             sender.backgroundColor = .systemGreen
         } else {
             sender.backgroundColor = .systemRed
-            if let correctButton = optionButtons.first(where: { $0.titleLabel?.text == correctAnswer }) {
-                correctButton.backgroundColor = .systemGreen
-            }
+            optionButtons[correctIndex].backgroundColor = .systemGreen
         }
 
-        // ViewModel’e sonucu bildir
-        onAnswered?(answer)
+        onAnswered?(String(sender.tag))
     }
+
 
 }

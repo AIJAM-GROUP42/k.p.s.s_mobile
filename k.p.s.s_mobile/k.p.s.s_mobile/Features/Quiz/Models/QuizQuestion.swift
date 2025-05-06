@@ -6,8 +6,12 @@
 //
 
 struct QuizQuestion: Codable {
-    let id: Int
     let question: String
     let options: [String]
-    let correctAnswer: String
+    let answerIndex: Int
+
+    enum CodingKeys: String, CodingKey {
+        case question, options
+        case answerIndex = "answer_index"
+    }
 }

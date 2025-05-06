@@ -9,7 +9,8 @@ import UIKit
 
 final class HomeViewController: UIViewController {
 
-    private let viewModel = HomeViewModel(service: MockPromptService())
+    private let viewModel = HomeViewModel(service: LessonService())
+
 
     // MARK: - UI
 
@@ -82,6 +83,10 @@ final class HomeViewController: UIViewController {
         label.text = "🧠 Hafıza Tekniği burada gösterilecek."
         return label
     }()
+    
+    var onLessonLoaded: ((LessonResponse) -> Void)?
+    var onError: ((String) -> Void)?
+
 
     // MARK: - Lifecycle
 
@@ -94,18 +99,27 @@ final class HomeViewController: UIViewController {
     // MARK: - Binding
 
     private func bindViewModel() {
-        viewModel.onResponseReceived = { [weak self] response in
+        viewModel.onLessonLoaded = { [weak self] response in
             guard let self = self else { return }
 
             DispatchQueue.main.async {
                 self.promptCardView.isHidden = true
-                self.infoTextView.text = response.info
+                self.infoTextView.text = response.content
                 self.infoTextView.isHidden = false
                 self.memoryLabel.text = "🧠 Hafıza Tekniği:\n\n\(response.memoryTip)"
                 self.memoryCardView.isHidden = false
             }
         }
+
+        viewModel.onError = { [weak self] message in
+            DispatchQueue.main.async {
+                let alert = UIAlertController(title: "Hata", message: message, preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "Tamam", style: .default))
+                self?.present(alert, animated: true)
+            }
+        }
     }
+
 
     // MARK: - Setup
 
@@ -170,9 +184,12 @@ final class HomeViewController: UIViewController {
     // MARK: - Action
 
     @objc private func learnButtonTapped() {
-        guard let topic = promptField.text, !topic.trimmingCharacters(in: .whitespaces).isEmpty else {
-            return
-        }
-        viewModel.sendPrompt(topic)
+        guard let topic = promptField.text, !topic.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        if let userId = UserDefaults.standard.integer(forKey: "user_id") as Int?, userId > 0 {
+            viewModel.generateLesson(topic: topic, userId: userId)
+                } else {
+                    print("❗ User ID bulunamadı.")
+                }
+        
     }
 }

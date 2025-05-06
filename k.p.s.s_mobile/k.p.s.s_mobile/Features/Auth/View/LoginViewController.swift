@@ -9,7 +9,7 @@ import UIKit
 
 final class LoginViewController: UIViewController {
 
-    private lazy var viewModel = LoginViewModel(service: MockAuthService())
+    private lazy var viewModel = LoginViewModel(service: AuthService())
 
     private let emailTextField: UITextField = {
         let textField = UITextField()
@@ -74,23 +74,27 @@ final class LoginViewController: UIViewController {
     }
 
     private func bindViewModel() {
-        viewModel.onLoginSuccess = { [weak self] user in
-            self?.statusLabel.text = "Hoş geldin, \(user.name)!"
-            self?.statusLabel.textColor = .systemGreen
+        viewModel.onLoginSuccess = { token in
+            UserDefaults.standard.set(token, forKey: "access_token")
+            DispatchQueue.main.async {
+                self.navigationController?.setViewControllers([MainTabBarController()], animated: true)
+            }
         }
 
-        viewModel.onLoginError = { [weak self] error in
-            self?.statusLabel.text = "Hata: \(error)"
+        /*
+        viewModel.onLoginFailure = { [weak self] errorMessage in
+            self?.statusLabel.text = errorMessage
             self?.statusLabel.textColor = .systemRed
         }
+        */
     }
 
     @objc private func loginButtonTapped() {
         let email = emailTextField.text ?? ""
         let password = passwordTextField.text ?? ""
         viewModel.login(email: email, password: password)
-        self.navigationController?.setViewControllers([MainTabBarController()], animated: true)
     }
+
     
     @objc private func goToSignup() {
         let signupVC = SignupViewController()

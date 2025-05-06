@@ -40,7 +40,7 @@ final class QuizViewController: UIViewController {
         return btn
     }()
 
-    private let viewModel = QuizViewModel(service: MockQuizService())
+    private let viewModel = QuizViewModel(service: QuizService())
     private let tableView = UITableView()
 
     override func viewDidLoad() {
@@ -113,10 +113,7 @@ final class QuizViewController: UIViewController {
         UIView.animate(withDuration: 0.3) {
             self.promptCardView.alpha = 0
         }
-
-        // Gerçek servisle entegre edeceksen burada çağır:
-        // self.viewModel.loadQuiz(for: prompt)
-        self.viewModel.loadQuiz()
+        self.viewModel.loadQuiz(topic: prompt)
     }
 
     private func bindViewModel() {
@@ -140,28 +137,24 @@ extension QuizViewController: UITableViewDataSource {
         }
         cell.configure(with: question)
 
-        cell.onAnswered = { [weak self] selectedAnswer in
+        cell.onAnswered = { [weak self] selected in
             guard let self = self else { return }
 
-            self.viewModel.recordAnswer(
-                questionId: question.id,
-                selected: selectedAnswer,
-                correct: question.correctAnswer
-            )
+            let isCorrect = self.viewModel.checkAnswer(questionIndex: indexPath.row, selectedIndex: Int(selected) ?? 0)
 
             if self.viewModel.quizFinished() {
                 let score = self.viewModel.scoreSummary()
-                let message = "✅ Doğru: \(score.correct)\n❌ Yanlış: \(score.wrong)"
+                let message = "✅ Doğru: \(score.correct)\n❌ Yanlış: \(score.total - score.correct)"
 
                 let alert = UIAlertController(title: "Quiz Tamamlandı!", message: message, preferredStyle: .alert)
                 alert.addAction(UIAlertAction(title: "Tamam", style: .default))
-
-                DispatchQueue.main.async {
-                    self.present(alert, animated: true)
-                }
-                self.viewModel.submitCorrectCount(userId: 1) {
-                        print("Doğru cevap sayısı API'ye gönderildi.")
-                    }
+                self.present(alert, animated: true)
+                if let userId = UserDefaults.standard.integer(forKey: "user_id") as Int?, userId > 0 {
+                    self.viewModel.submitResults(userId: userId)
+                        } else {
+                            print("❗ User ID bulunamadı.")
+                        }
+                
             }
         }
 

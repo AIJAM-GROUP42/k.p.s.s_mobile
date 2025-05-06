@@ -9,56 +9,55 @@ import Foundation
 final class QuizViewModel {
     private let service: QuizServiceProtocol
     private(set) var questions: [QuizQuestion] = []
-    private(set) var results: [QuizAnswerResult] = []
+    private var correctAnswers: Int = 0
+    private var answeredCount: Int = 0
+
     var onUpdate: (() -> Void)?
+    var onSubmitted: ((String) -> Void)?
 
     init(service: QuizServiceProtocol) {
         self.service = service
     }
 
-    func loadQuiz() {
-        service.fetchQuiz { [weak self] result in
-            switch result {
-            case .success(let questions):
-                self?.questions = questions
-                self?.onUpdate?()
-            case .failure(let error):
-                print("Quiz error: \(error)")
+    func loadQuiz(topic: String) {
+        service.fetchQuiz(for: topic) { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let quiz):
+                    self?.questions = quiz
+                    self?.onUpdate?()
+                case .failure(let error):
+                    print("Quiz fetch error:", error)
+                }
             }
         }
     }
 
-    func recordAnswer(questionId: Int, selected: String, correct: String) {
-        let result = QuizAnswerResult(
-            questionId: questionId,
-            selectedAnswer: selected,
-            isCorrect: selected == correct
-        )
-        results.append(result)
-    }
-
-    // ✅ Yeni: sadece toplam doğru sayısını gönderiyoruz
-    func submitCorrectCount(userId: Int, completion: @escaping () -> Void) {
-        let correctCount = scoreSummary().correct
-        let submission = QuizSubmission(userId: userId, correctCount: correctCount)
-
-        service.submitQuiz(submission) { result in
-            switch result {
-            case .success:
-                completion()
-            case .failure(let error):
-                print("Skor gönderilemedi: \(error)")
-            }
-        }
+    func checkAnswer(questionIndex: Int, selectedIndex: Int) -> Bool {
+        let correct = questions[questionIndex].answerIndex == selectedIndex
+        if correct { correctAnswers += 1 }
+        answeredCount += 1
+        return correct
     }
 
     func quizFinished() -> Bool {
-        return results.count == questions.count
+        return answeredCount == questions.count
     }
 
-    func scoreSummary() -> (correct: Int, wrong: Int) {
-        let correct = results.filter { $0.isCorrect }.count
-        let wrong = results.count - correct
-        return (correct, wrong)
+    func submitResults(userId: Int) {
+        service.submitQuiz(userId: userId, correctCount: correctAnswers, score: correctAnswers) { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let message):
+                    self?.onSubmitted?(message)
+                case .failure:
+                    self?.onSubmitted?("Gönderim başarısız.")
+                }
+            }
+        }
+    }
+
+    func scoreSummary() -> (correct: Int, total: Int) {
+        (correctAnswers, questions.count)
     }
 }

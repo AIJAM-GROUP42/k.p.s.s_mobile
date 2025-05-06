@@ -6,5 +6,5 @@
 //
 
 protocol BadgeServiceProtocol {
-    func fetchBadges(completion: @escaping (Result<[Badge], Error>) -> Void)
+    func fetchBadges(for userId: Int, completion: @escaping (Result<[Badge], Error>) -> Void)
 }
